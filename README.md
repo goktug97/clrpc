@@ -1,6 +1,8 @@
 clRPC
 -----
 
+![Demo](./demo.gif)
+
 > [!WARNING]
 >
 > Just a fun experiment
