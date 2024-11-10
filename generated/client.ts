@@ -1,8 +1,10 @@
-import type { GREETING_Input } from './types';
+export interface RPCProcedure<TInput, TOutput> {
+  query(input: TInput): Promise<TOutput>;
+}
 
-class CLRPCClient {
+export class CLRPCClient<TProcedures> {
   private baseUrl: string;
-
+  
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
   }
@@ -19,18 +21,16 @@ class CLRPCClient {
       },
       body: JSON.stringify(input),
     });
-
     if (!response.ok) {
       throw new Error(`CLRPC error: ${response.statusText}`);
     }
-
     return response.json();
   }
 
-  public createCaller<TInput, TOutput>(
+  protected createCaller<TInput, TOutput>(
     procedureName: string,
     type: 'query' | 'mutation' = 'query'
-  ) {
+  ): RPCProcedure<TInput, TOutput> {
     return {
       query: async (input: TInput): Promise<TOutput> => {
         return this.makeRequest<TInput, TOutput>(procedureName, type, input);
@@ -39,7 +39,6 @@ class CLRPCClient {
   }
 }
 
-const clrpc = new CLRPCClient('http://localhost:3000');
-
-// Create type-safe procedure callers
-export const greeting = clrpc.createCaller<GREETING_Input, string>('greeting');
+export function createCLRPCClient<TProcedures>(baseUrl: string): CLRPCClient<TProcedures> & TProcedures {
+  return new CLRPCClient(baseUrl) as CLRPCClient<TProcedures> & TProcedures;
+}
