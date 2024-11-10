@@ -3,6 +3,8 @@
 (defpackage #:clrpc.types
   (:use #:cl #:alexandria)
   (:export #:cl-type-to-ts
+           #:generate-ts-interface
+           #:*clos-types*
            #:register-type-mapping))
 
 (defpackage #:clrpc.core

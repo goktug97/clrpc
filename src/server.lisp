@@ -10,6 +10,26 @@
           do (setf (gethash key table) value))
     table))
 
+(defun convert-to-clos (value type)
+  "Convert JSON hash-table VALUE to a CLOS object of TYPE if TYPE is a CLOS class."
+  (cond
+    ((and (consp value) (find-class type nil))
+     (let* ((hash-table (make-hash-table :test 'equal))
+            (instance (make-instance type)))
+       (loop for (k . v) in value
+             do (setf (gethash (string-downcase (string k)) hash-table) v))
+       (loop for slot in (closer-mop:class-slots (find-class type))
+             for slot-name = (closer-mop:slot-definition-name slot)
+             for slot-type = (closer-mop:slot-definition-type slot)
+             for json-value = (gethash (string-downcase (string slot-name)) hash-table)
+             when json-value
+             do (setf (slot-value instance slot-name)
+                      (if (find-class slot-type nil)
+                          (convert-to-clos json-value slot-type)
+                          json-value)))
+       instance))
+    (t value)))
+
 (defun handle-procedure-call (procedure-name body)
   (let ((procedure (gethash procedure-name *procedures*)))
     (if procedure
@@ -17,8 +37,10 @@
                (fn (getf procedure :fn))
                (parsed-body (parse-request-body body))
                (arg-values (mapcar (lambda (arg)
-                                   (let ((arg-name (first arg)))
-                                     (gethash arg-name parsed-body)))
+                                   (let* ((arg-name (first arg))
+                                          (arg-type (second arg))
+                                          (json-value (gethash arg-name parsed-body)))
+                                     (convert-to-clos json-value arg-type)))
                                  args)))
           (apply fn arg-values))
         (error "Procedure not found: ~A" procedure-name))))
@@ -27,7 +49,6 @@
   (when *server*
     (stop-server))
     
-  ;; For debugging
   (setf hunchentoot:*catch-errors-p* nil)
     
   (setf *server*

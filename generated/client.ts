@@ -27,7 +27,7 @@ export class CLRPCClient<TProcedures> {
     return response.json();
   }
 
-  protected createCaller<TInput, TOutput>(
+  createCaller<TInput, TOutput>(
     procedureName: string,
     type: 'query' | 'mutation' = 'query'
   ): RPCProcedure<TInput, TOutput> {
@@ -40,5 +40,15 @@ export class CLRPCClient<TProcedures> {
 }
 
 export function createCLRPCClient<TProcedures>(baseUrl: string): CLRPCClient<TProcedures> & TProcedures {
-  return new CLRPCClient(baseUrl) as CLRPCClient<TProcedures> & TProcedures;
+  const client = new CLRPCClient<TProcedures>(baseUrl) as CLRPCClient<TProcedures> & TProcedures;
+
+  return new Proxy(client, {
+    get(target, prop) {
+      if (prop in target) {
+        return (target as any)[prop];
+      }
+
+      return target.createCaller(prop as string);
+    }
+  }) as CLRPCClient<TProcedures> & TProcedures;
 }
