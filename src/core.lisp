@@ -1,5 +1,7 @@
-(defvar *procedures* (make-hash-table :test 'equal))
-(defvar *ts-types-file* #P"generated/types.ts")
+(in-package #:clrpc.core)
+
+(defparameter *procedures* (make-hash-table :test 'equal))
+(defparameter *ts-types-file* #P"generated/types.ts")
 
 (defun ensure-generated-dir ()
   (ensure-directories-exist *ts-types-file*))
@@ -22,8 +24,8 @@
         (arg-types (mapcar #'cadr args)))
     `(progn
        (setf (gethash ,(string-downcase (symbol-name name)) *procedures*)
-             (list :args ',args
+             (list :args (list ,@(loop for (name type) in args
+                                     collect `(list ,(string-downcase (symbol-name name)) ',type)))
                    :fn (lambda ,arg-names ,@body)))
        (generate-ts-types ',name ',args)
        ',name)))
-

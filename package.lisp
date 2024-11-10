@@ -19,11 +19,11 @@
 (defpackage #:clrpc
   (:use #:cl)
   (:import-from #:clrpc.core
-                #:define-procedure)
+                #:define-procedure
+                #:*procedures*)
   (:import-from #:clrpc.server
                 #:start-server
                 #:stop-server)
   (:export #:define-procedure
            #:start-server
            #:stop-server))
-

@@ -10,7 +10,8 @@
                #:jonathan
                #:hunchentoot
                #:parenscript
-               #:closer-mop)
+               #:closer-mop
+               #:babel)
   :components ((:file "package")
                (:module "src"
                 :components
